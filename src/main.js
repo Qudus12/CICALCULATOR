@@ -12,22 +12,22 @@ document.querySelector('#app').innerHTML = `
     </section>
     <section class="calculator" aria-label="Compound interest calculator">
       <form class="form-panel" id="calculator-form">
-        <div class="section-heading"><span class="section-number">01</span><h2>Set your starting point</h2></div>
+        <div class="section-heading"><span class="section-number">01</span><h2>Set your yearly contribution</h2></div>
         <label class="field"><span>Currency</span><select id="currency" name="currency"><option value="USD">US dollar (USD)</option><option value="NGN">Nigerian naira (NGN)</option></select></label>
-        <label class="field"><span>Starting amount</span><div class="input-wrap"><span class="prefix" id="currency-symbol">$</span><input id="amount" name="amount" type="number" min="0" step="100" value="10000" required></div></label>
+        <label class="field"><span>Contribution at the beginning of each year</span><div class="input-wrap"><span class="prefix" id="currency-symbol">$</span><input id="amount" name="amount" type="number" min="0" step="100" value="100000" required></div></label>
         <label class="field"><span>Annual interest rate</span><div class="input-wrap"><input id="rate" name="rate" type="number" min="0" step="0.1" value="7" required><span class="suffix">%</span></div></label>
         <label class="field"><span>Time horizon</span><div class="input-wrap"><input id="years" name="years" type="number" min="1" step="1" value="10" required><span class="suffix">years</span></div></label>
         <button type="submit">Calculate growth <span aria-hidden="true">↗</span></button>
-        <p class="formula-note">A = P(1 + r)<sup>t</sup></p>
+        <p class="formula-note">A = P × [((1 + r)<sup>t</sup> − 1) / r] × (1 + r)</p>
       </form>
       <div class="result-panel" aria-live="polite">
         <div class="result-topline"><span>Projected value</span><span class="live-dot">● Live</span></div>
         <p class="result-value" id="result">$19,671</p>
-        <p class="result-caption">after <strong id="result-years">10 years</strong> of compounding</p>
+        <p class="result-caption">after <strong id="result-years">10 years</strong> of beginning-of-year deposits</p>
         <div class="growth-row"><span>Total growth</span><strong id="growth">+$9,671</strong></div>
         <div class="bar" aria-hidden="true"><span id="growth-bar"></span></div>
-        <div class="legend"><span><i class="legend-start"></i>Starting amount</span><span><i class="legend-growth"></i>Growth</span></div>
-        <p class="disclaimer">This estimate assumes annual compounding and a constant rate of return.</p>
+        <div class="legend"><span><i class="legend-start"></i>Total contributions</span><span><i class="legend-growth"></i>Growth</span></div>
+        <p class="disclaimer">This estimate adds each contribution at the beginning of the year, then compounds it at a constant annual rate.</p>
       </div>
     </section>
     <footer><span>Small inputs. Long horizons.</span><span>© 2026 Nest</span></footer>
@@ -54,8 +54,11 @@ function calculate() {
   const amount = Number(amountInput.value)
   const rate = Number(rateInput.value) / 100
   const years = Number(yearsInput.value)
-  const projected = amount * (1 + rate) ** years
-  const earned = projected - amount
+  const projected = rate === 0
+    ? amount * years
+    : amount * (((1 + rate) ** years - 1) / rate) * (1 + rate)
+  const totalContributions = amount * years
+  const earned = projected - totalContributions
   const growthPercent = Math.min((earned / projected) * 100, 100)
   const selectedCurrency = currencySettings[currencyInput.value]
   const formatter = new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: currencyInput.value, maximumFractionDigits: 0 })
